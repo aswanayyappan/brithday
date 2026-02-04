@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-
+import { useDrag } from '@use-gesture/react';
+import { useSpring, animated } from '@react-spring/web';
 
 import mem1 from '../assets/memories/memory-1.jpg';
 import mem2 from '../assets/memories/memory-2.jpg';
@@ -33,33 +34,38 @@ const Memory = ({ onNext }) => {
     }, []);
 
     // Infinite canvas logic: we just allow dragging a large container
+    const [{ x, y }, api] = useSpring(() => ({ x: 0, y: 0 }));
 
-    // Mobile detection logic remains same
+    const bind = useDrag(({ offset: [ox, oy] }) => {
+        if (!isMobile) {
+            api.start({ x: ox, y: oy });
+        }
+    });
 
     const memories = [
-        { type: 'photo', id: 1, src: mem1, caption: 'First Meeting' },
-        { type: 'photo', id: 2, src: mem2, caption: 'Football Game' },
-        { type: 'photo', id: 3, src: mem3, caption: 'Random Walks' },
-        { type: 'photo', id: 4, src: mem4, caption: 'Classroom Fun' },
-        { type: 'video', id: 5, src: mem5, caption: 'Reel: Dance' },
-        { type: 'video', id: 6, src: mem6, caption: 'Reel: Crazy Moments' },
-        { type: 'video', id: 7, src: mem7, caption: 'Reel: Travel' },
-        { type: 'video', id: 8, src: mem8, caption: 'Reel: Birthday Prep' },
-        { type: 'video', id: 9, src: mem9, caption: 'Reel: Gang Fits' },
-        { type: 'video', id: 10, src: mem10, caption: 'Reel: Lunch Breaks' },
-        { type: 'video', id: 11, src: mem11, caption: 'Reel: Good Times' },
-        { type: 'video', id: 12, src: mem12, caption: 'Reel: More Fun' },
-        { type: 'photo', id: 13, src: mem13, caption: 'Candid Shot' },
-        { type: 'photo', id: 14, src: mem14, caption: 'Group Selfie' },
-        { type: 'photo', id: 15, src: mem15, caption: 'Smile' },
-        { type: 'photo', id: 16, src: mem16, caption: 'Laughter' },
-        { type: 'photo', id: 17, src: mem17, caption: 'Besties' },
-        { type: 'photo', id: 18, src: mem18, caption: 'Memories' },
-        { type: 'photo', id: 19, src: mem19, caption: 'Forever' },
+        { type: 'photo', id: 1, src: mem1, caption: 'First Meeting', x: 100, y: 100, rot: -5 },
+        { type: 'photo', id: 2, src: mem2, caption: 'Football Game', x: 400, y: -50, rot: 3 },
+        { type: 'photo', id: 3, src: mem3, caption: 'Random Walks', x: -200, y: 200, rot: -2 },
+        { type: 'photo', id: 4, src: mem4, caption: 'Classroom Fun', x: -300, y: -100, rot: -4 },
+        { type: 'video', id: 5, src: mem5, caption: 'Reel: Dance', x: 150, y: 500, rot: 5 },
+        { type: 'video', id: 6, src: mem6, caption: 'Reel: Crazy Moments', x: 0, y: -300, rot: 6 },
+        { type: 'video', id: 7, src: mem7, caption: 'Reel: Travel', x: 300, y: 700, rot: -5 },
+        { type: 'video', id: 8, src: mem8, caption: 'Reel: Birthday Prep', x: 700, y: 100, rot: 3 },
+        { type: 'video', id: 9, src: mem9, caption: 'Reel: Gang Fits', x: -400, y: 50, rot: 4 },
+        { type: 'video', id: 10, src: mem10, caption: 'Reel: Lunch Breaks', x: 200, y: -400, rot: -1 },
+        { type: 'video', id: 11, src: mem11, caption: 'Reel: Good Times', x: 500, y: 300, rot: 2 },
+        { type: 'video', id: 12, src: mem12, caption: 'Reel: More Fun', x: -500, y: -200, rot: -3 },
+        { type: 'photo', id: 13, src: mem13, caption: 'Candid Shot', x: 600, y: -300, rot: 5 },
+        { type: 'photo', id: 14, src: mem14, caption: 'Group Selfie', x: -600, y: 200, rot: -4 },
+        { type: 'photo', id: 15, src: mem15, caption: 'Smile', x: 0, y: 600, rot: 1 },
+        { type: 'photo', id: 16, src: mem16, caption: 'Laughter', x: 400, y: 500, rot: 3 },
+        { type: 'photo', id: 17, src: mem17, caption: 'Besties', x: -200, y: -500, rot: -2 },
+        { type: 'photo', id: 18, src: mem18, caption: 'Memories', x: 300, y: -600, rot: 4 },
+        { type: 'photo', id: 19, src: mem19, caption: 'Forever', x: -500, y: 500, rot: -3 },
     ];
 
     return (
-        <div className="w-full h-screen bg-[#050505] overflow-hidden relative font-sans text-gray-900">
+        <div className="w-full h-screen bg-[#050505] overflow-hidden relative cursor-grab active:cursor-grabbing touch-none font-sans text-gray-900">
             {/* Background Grid */}
             <div className="absolute inset-0 opacity-10 pointer-events-none"
                 style={{ backgroundImage: 'radial-gradient(circle, #333 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
@@ -70,22 +76,61 @@ const Memory = ({ onNext }) => {
                 <h2 className="text-retro-gold font-serif text-2xl md:text-3xl opacity-80 tracking-widest uppercase">
                     Memories
                 </h2>
-                <p className="text-white/50 text-sm md:text-base">Scroll to explore</p>
+                <p className="text-white/50 text-sm md:text-base">
+                    {isMobile ? "Scroll to explore" : "Drag to explore"}
+                </p>
             </div>
 
-            {/* Main Content Area - Scrollable Grid */}
-            <div className="absolute inset-0 overflow-y-auto pt-32 pb-32 px-4 md:px-10 scrollbar-hide">
-                <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+            {/* Main Content Area */}
+            {isMobile ? (
+                <div className="absolute inset-0 overflow-y-auto pt-32 pb-32 px-4 md:px-10 scrollbar-hide">
+                    <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+                        {memories.map((item) => (
+                            <div
+                                key={item.id}
+                                className="bg-white p-3 md:p-4 shadow-xl transform transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl rotate-0 hover:rotate-2 group"
+                            >
+                                <div className="aspect-[4/5] bg-gray-100 overflow-hidden relative border border-gray-200">
+                                    {item.type === 'video' ? (
+                                        <video
+                                            src={item.src}
+                                            className="w-full h-full object-cover"
+                                            autoPlay
+                                            muted
+                                            loop
+                                            playsInline
+                                        />
+                                    ) : (
+                                        <img
+                                            src={item.src}
+                                            alt={item.caption}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <animated.div
+                    {...bind()}
+                    style={{ x, y }}
+                    className="absolute top-1/2 left-1/2 w-0 h-0" // Center origin
+                >
                     {memories.map((item) => (
                         <div
                             key={item.id}
-                            className="bg-white p-3 md:p-4 shadow-xl transform transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl rotate-0 hover:rotate-2 group"
+                            className="absolute bg-white p-3 shadow-2xl transition-transform hover:z-50 hover:scale-110 duration-300 w-64"
+                            style={{
+                                transform: `translate(${item.x}px, ${item.y}px) rotate(${item.rot}deg)`,
+                            }}
                         >
-                            <div className="aspect-[4/5] bg-gray-100 overflow-hidden relative border border-gray-200">
+                            <div className="aspect-[4/5] bg-gray-200 flex items-center justify-center overflow-hidden relative">
                                 {item.type === 'video' ? (
                                     <video
                                         src={item.src}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover pointer-events-none"
                                         autoPlay
                                         muted
                                         loop
@@ -95,15 +140,14 @@ const Memory = ({ onNext }) => {
                                     <img
                                         src={item.src}
                                         alt={item.caption}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                        className="w-full h-full object-cover pointer-events-none"
                                     />
                                 )}
                             </div>
-
                         </div>
                     ))}
-                </div>
-            </div>
+                </animated.div>
+            )}
 
             {/* Continue Button */}
             <div className="absolute bottom-0 left-0 w-full z-50 pb-8 pt-4 bg-gradient-to-t from-[#050505] to-transparent flex justify-end px-10 pointer-events-none">
@@ -117,5 +161,4 @@ const Memory = ({ onNext }) => {
         </div>
     );
 };
-
 export default Memory;
